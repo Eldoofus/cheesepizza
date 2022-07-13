@@ -1,3 +1,4 @@
+#pragma once
 #include<bits/stdc++.h>
 using namespace std;
 
@@ -121,16 +122,19 @@ struct Graph {
 /// Space Complexity: O(V^2)
 struct AdjMtrx : Graph {
     vector<vector<bool>> m;
+    vector<Vertex> lv;
     
     /// Time Complexity: O(V)
     void addVertex(Vertex v) override {
         Graph::addVertex(v);
         for(vector<bool> w : m) w.push_back(false);
         m.emplace_back(V.size());
+        lv.push_back(v);
     }
 
     /// Time Complexity: O(1)
     void addEdge(Edge e) override {
+        Graph::addEdge(e);
         m[v_[*e.u]][v_[*e.v]] = true;
         if(!e.directed) m[v_[*e.u]][v_[*e.v]] = true;
     }
@@ -139,12 +143,17 @@ struct AdjMtrx : Graph {
     void removeVertex(Vertex v) override {
         for(vector<bool> w : m) swap(w.back(), w[v_[v]]);
         swap(m[v_[v]], m.back());
+        v_[lv.back()] = v_[v];
+        lv[v_[lv.back()]] = lv.back();
+        lv.pop_back();
+        Graph::removeVertex(v);
     }
 
     /// Time Complexity: O(1)
     void removeEdge(Edge e) override {
         m[v_[*e.u]][v_[*e.v]] = false;
         if(!e.directed) m[v_[*e.u]][v_[*e.v]] = false;
+        Graph::removeEdge(e);
     }
 
     /// Time Complexity: O(V)
@@ -167,20 +176,29 @@ struct AdjMtrx : Graph {
     }
 };
 
-/// Space Complexity: O()
+/// Space Complexity: O(V+E)
 struct AdjList : Graph {
-    /// Time Complexity: O()
+    vector<vector<int>> l;
+
+    /// Time Complexity: O(1)
     void addVertex(Vertex v) override {
         Graph::addVertex(v);
+        l.emplace_back();
     }
 
-    /// Time Complexity: O()
+    /// Time Complexity: O(1)
     void addEdge(Edge e) override {
         Graph::addEdge(e);
+        l[v_[*e.u]].push_back(v_[*e.v]);
+        if(e.directed) l[v_[*e.v]].push_back(v_[*e.u]);
     }
 
     /// Time Complexity: O()
     void removeVertex(Vertex v) override {
+        for(int w : l[v_[v]])
+            for(int i=0;i<l[v_[w]].size();i++)
+                if(l[v_[w]][i] == v_[v]) swap(l[v_[w]][i], l[v_[w]].back());
+        //l[v_[w]].pop_back();
         Graph::removeVertex(v);
     }
 
@@ -283,7 +301,3 @@ struct IncList : Graph {
         return l[v];
     }
 };
-
-int main(){
-    return 0;
-}
