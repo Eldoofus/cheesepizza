@@ -5,19 +5,19 @@ using namespace std;
 struct Vertex {
     int weight = 0;
     size_t hash;
-    static mt19937 r;
+    static mt19937 rblah;
 
     Vertex(){
-        hash = r();
+        hash = rblah();
     }
     
     Vertex(int a) {
-        hash = r();
+        hash = rblah();
         weight = a;
     }
 
     Vertex(const Vertex& v) {
-        hash = r();
+        hash = rblah();
         weight = v.weight;
     }
 
@@ -77,31 +77,33 @@ struct Graph {
     unordered_map<Vertex, int> v_;
     unordered_map<Edge, int> e_;
 
-    virtual void addVertex(Vertex v) {
+    virtual void addVertex(Vertex& v) {
         V.insert(v);
         v_.emplace(v, v_.size());
     }
 
-    virtual void addEdge(Edge e) {
+    virtual void addEdge(Edge& e) {
         E.insert(e);
         e_.emplace(e, e_.size());
     }
 
-    virtual void removeVertex(Vertex v) {
+    virtual void removeVertex(Vertex& v) {
         V.erase(v);
         v_.erase(v);
     }
 
-    virtual void removeEdge(Edge e) {
+    virtual void removeEdge(Edge& e) {
         E.erase(e);
         e_.erase(e);
     }
 
-    virtual int getDegree(Vertex v) = 0;
+    virtual int getDegree(Vertex& v) = 0;
 
-    virtual bool isConnected(Vertex u, Vertex v) = 0;
+    virtual bool isAdjacent(Vertex& u, Vertex& v) = 0;
 
-    virtual unordered_set<Edge> getNeighbours(Vertex v) = 0;
+    virtual bool isConnected(Vertex& u, Vertex& v) = 0;
+
+    virtual unordered_set<Edge> getNeighbours(Vertex& v) = 0;
 
     /// Time Complexity: O(1)
     unordered_set<Vertex> vertices() {
@@ -117,6 +119,7 @@ struct Graph {
     int size() {
         return V.size();
     }
+
 };
 
 /// Space Complexity: O(V^2)
@@ -125,7 +128,7 @@ struct AdjMtrx : Graph {
     vector<Vertex> lv;
     
     /// Time Complexity: O(V)
-    void addVertex(Vertex v) override {
+    void addVertex(Vertex& v) override {
         Graph::addVertex(v);
         for(vector<bool> w : m) w.push_back(false);
         m.emplace_back(V.size());
@@ -133,14 +136,14 @@ struct AdjMtrx : Graph {
     }
 
     /// Time Complexity: O(1)
-    void addEdge(Edge e) override {
+    void addEdge(Edge& e) override {
         Graph::addEdge(e);
         m[v_[*e.u]][v_[*e.v]] = true;
         if(!e.directed) m[v_[*e.u]][v_[*e.v]] = true;
     }
 
     /// Time Complexity: O(V)
-    void removeVertex(Vertex v) override {
+    void removeVertex(Vertex& v) override {
         for(vector<bool> w : m) swap(w.back(), w[v_[v]]);
         swap(m[v_[v]], m.back());
         v_[lv.back()] = v_[v];
@@ -150,28 +153,28 @@ struct AdjMtrx : Graph {
     }
 
     /// Time Complexity: O(1)
-    void removeEdge(Edge e) override {
+    void removeEdge(Edge& e) override {
         m[v_[*e.u]][v_[*e.v]] = false;
         if(!e.directed) m[v_[*e.u]][v_[*e.v]] = false;
         Graph::removeEdge(e);
     }
 
     /// Time Complexity: O(V)
-    int getDegree(Vertex v) override {
+    int getDegree(Vertex& v) override {
         int d = 0;
         for(bool e : m[v_[v]]) d += e;
         return d;
     }
 
     /// Time Complexity: O(1)
-    bool isConnected(Vertex u, Vertex v) override {
-        return m[v_[u]][v_[v]] == true;
+    bool isAdjacent(Vertex& u, Vertex& v) override {
+        return m[v_[u]][v_[v]];
     }
 
     /// Time Complexity: O(V)
-    unordered_set<Edge> getNeighbours(Vertex v) override {
+    unordered_set<Edge> getNeighbours(Vertex& v) override {
         unordered_set<Edge> n;
-        for(Vertex w : V) if(isConnected(v, w)) n.insert(*new Edge(v, w));
+        for(Vertex w : V) if(isAdjacent(v, w)) n.insert(*new Edge(v, w));
         return n;
     }
 };
@@ -181,20 +184,20 @@ struct AdjList : Graph {
     vector<vector<int>> l;
 
     /// Time Complexity: O(1)
-    void addVertex(Vertex v) override {
+    void addVertex(Vertex& v) override {
         Graph::addVertex(v);
         l.emplace_back();
     }
 
     /// Time Complexity: O(1)
-    void addEdge(Edge e) override {
+    void addEdge(Edge& e) override {
         Graph::addEdge(e);
         l[v_[*e.u]].push_back(v_[*e.v]);
         if(e.directed) l[v_[*e.v]].push_back(v_[*e.u]);
     }
 
     /// Time Complexity: O()
-    void removeVertex(Vertex v) override {
+    void removeVertex(Vertex& v) override {
         for(int w : l[v_[v]])
             for(int i=0;i<l[v_[w]].size();i++)
                 if(l[v_[w]][i] == v_[v]) swap(l[v_[w]][i], l[v_[w]].back());
@@ -203,55 +206,55 @@ struct AdjList : Graph {
     }
 
     /// Time Complexity: O()
-    void removeEdge(Edge e) override {
+    void removeEdge(Edge& e) override {
         Graph::removeEdge(e);
     }
 
     /// Time Complexity: O()
-    int getDegree(Vertex v) override {
+    int getDegree(Vertex& v) override {
     }
 
     /// Time Complexity: O()
-    bool isConnected(Vertex u, Vertex v) override {
+    bool isAdjacent(Vertex& u, Vertex& v) override {
     }
 
     /// Time Complexity: O()
-    unordered_set<Edge> getNeighbours(Vertex v) override {
+    unordered_set<Edge> getNeighbours(Vertex& v) override {
     }
 };
 
 /// Space Complexity: O()
 struct IncMtrx : Graph {
     /// Time Complexity: O()
-    void addVertex(Vertex v) override {
+    void addVertex(Vertex& v) override {
         Graph::addVertex(v);
     }
 
     /// Time Complexity: O()
-    void addEdge(Edge e) override {
+    void addEdge(Edge& e) override {
         Graph::addEdge(e);
     }
 
     /// Time Complexity: O()
-    void removeVertex(Vertex v) override {
+    void removeVertex(Vertex& v) override {
         Graph::removeVertex(v);
     }
 
     /// Time Complexity: O()
-    void removeEdge(Edge e) override {
+    void removeEdge(Edge& e) override {
         Graph::removeEdge(e);
     }
 
     /// Time Complexity: O()
-    int getDegree(Vertex v) override {
+    int getDegree(Vertex& v) override {
     }
 
     /// Time Complexity: O()
-    bool isConnected(Vertex u, Vertex v) override {
+    bool isAdjacent(Vertex& u, Vertex& v) override {
     }
 
     /// Time Complexity: O()
-    unordered_set<Edge> getNeighbours(Vertex v) override {
+    unordered_set<Edge> getNeighbours(Vertex& v) override {
     }
 };
 
@@ -260,44 +263,67 @@ struct IncList : Graph {
     unordered_map<Vertex, unordered_set<Edge>> l;
 
     /// Time Complexity: O(1)
-    void addVertex(Vertex v) override {
+    void addVertex(Vertex& v) override {
         Graph::addVertex(v);
         l[v];
     }
 
     /// Time Complexity: O(1)
-    void addEdge(Edge e) override {
+    void addEdge(Edge& e) override {
         Graph::addEdge(e);
         l[*e.u].insert(e);
         if(!e.directed) l[*e.v].insert(e);
     }
 
     /// Time Complexity: O(deg(v))
-    void removeVertex(Vertex v) override {
+    void removeVertex(Vertex& v) override {
         Graph::removeVertex(v);
         for(auto e : l[v]) removeEdge(e);
         l.erase(v);
     }
 
     /// Time Complexity: O(1)
-    void removeEdge(Edge e) override {
+    void removeEdge(Edge& e) override {
         Graph::removeEdge(e);
         l[*e.u].erase(e);
         if(!e.directed) l[*e.v].erase(e);
     }
 
     /// Time Complexity: O(1)
-    int getDegree(Vertex v) override {
+    int getDegree(Vertex& v) override {
         return l[v].size();
     }
 
     /// Time Complexity: O(1)
-    bool isConnected(Vertex u, Vertex v) override {
+    bool isAdjacent(Vertex& u, Vertex& v) override {
         return l[u].contains(*new Edge(u, v));
     }
 
+    ///Time Complexity: O(V+E)
+    bool isConnected(Vertex& u, Vertex& v) override {
+        deque<Vertex> q;
+        unordered_set<Vertex> vs;
+        Vertex* x;
+        vs.insert(u);
+        q.push_back(u);
+        while(!q.empty()){
+            x = &q.front();
+            q.pop_front();
+            if(*x == v){
+                return true;
+            }
+            for(Edge e : l[*x]){
+                Vertex* w = *x == *e.u? e.v : e.u;
+                if(!vs.contains(*w)){
+                    vs.insert(*w);
+                    q.push_back(*w);
+                }
+            }
+        }
+    }
+
     /// Time Complexity: O(1)
-    unordered_set<Edge> getNeighbours(Vertex v) override {
+    unordered_set<Edge> getNeighbours(Vertex& v) override {
         return l[v];
     }
 };
