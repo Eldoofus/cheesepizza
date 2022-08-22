@@ -30,8 +30,9 @@ int main(){
     for(int i=0;i<v;i++){
         V.emplace_back();
         VV.emplace_back();
+        cout << VV.back().hash << " ";
         g->addVertex(VV.back());
-    }
+    } cout << endl;
     int a, b;
     for(long long i : E){
         cout << i << endl;
@@ -39,8 +40,13 @@ int main(){
     for(int i=0;i<ops;i++){
         a = rnd(rng);
         b = rnd(rng);
+        if(a == b){
+            i--;
+            continue;
+        }
         cout << a << ' ' << b << endl;
-        switch(uni(rng)){
+        int c = i<0?1:uni(rng);
+        switch(c){
             case 1:
                 if(E.contains((((long long)a) << 32) | ((long long)b))){
                     i--;

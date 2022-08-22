@@ -5,7 +5,7 @@ using namespace std;
 struct Vertex {
     int weight = 0;
     size_t hash;
-    static mt19937 rblah;
+    static inline mt19937 rblah;
 
     Vertex(){
         hash = rblah();
@@ -17,7 +17,7 @@ struct Vertex {
     }
 
     Vertex(const Vertex& v) {
-        hash = rblah();
+        hash = v.hash;
         weight = v.weight;
     }
 
@@ -301,18 +301,22 @@ struct IncList : Graph {
 
     ///Time Complexity: O(V+E)
     bool isConnected(Vertex& u, Vertex& v) override {
+        cout << "test1" << endl;
         deque<Vertex> q;
         unordered_set<Vertex> vs;
         Vertex* x;
         vs.insert(u);
         q.push_back(u);
+        cout << "test2 " << u.hash << endl;
         while(!q.empty()){
+            cout << "test5" << endl;
             x = &q.front();
             q.pop_front();
-            if(*x == v){
-                return true;
-            }
+            cout << "test3 " << x->hash << endl;
+            if(*x == v) return true;
+            if(l[*x].empty()) continue;
             for(Edge e : l[*x]){
+                cout << "test4" << endl;
                 Vertex* w = *x == *e.u? e.v : e.u;
                 if(!vs.contains(*w)){
                     vs.insert(*w);
