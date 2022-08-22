@@ -15,12 +15,15 @@ constexpr auto type_name() {
   return name;
 }
 
-int v = 10, ops = 100;
+int v = 10000, ops = 130000;
 
 int main(){
+    ofstream oo("out.txt"), ii("in.txt");
+    ii << v << ' ' << ops << endl;
     random_device rd;
+    int rr = rd();
     mt19937 rng(rd());
-    uniform_int_distribution<int> uni(1,3);
+    uniform_int_distribution<int> uni(1, 3);
     uniform_int_distribution<int> rnd(0, v-1);
     vector<dynTreeNode> V;
     vector<Vertex> VV;
@@ -28,15 +31,14 @@ int main(){
     dynTreeNode* dummy;
     Graph* g = new IncList();
     for(int i=0;i<v;i++){
-        V.emplace_back();
-        VV.emplace_back();
-        cout << VV.back().hash << " ";
+        V.emplace_back(i);
+        VV.emplace_back(i);
+        //cout << VV.back().hash << " ";
         g->addVertex(VV.back());
-    } cout << endl;
+    } //cout << endl;
+    vector<int> falses;
     int a, b;
-    for(long long i : E){
-        cout << i << endl;
-    }
+    int cc = 3;
     for(int i=0;i<ops;i++){
         a = rnd(rng);
         b = rnd(rng);
@@ -44,36 +46,73 @@ int main(){
             i--;
             continue;
         }
-        cout << a << ' ' << b << endl;
-        int c = i<0?1:uni(rng);
+        //cout << a << ' ' << b << endl;
+        int c = i<100000?uni(rng):3;
         switch(c){
             case 1:
                 if(E.contains((((long long)a) << 32) | ((long long)b))){
                     i--;
                     continue;
                 } else {
+                    //cout << "-----------------------------------\n";
+                    ii << "I " << a << ' ' << b << endl;
+                    //printf("%d. Insert Edge: %d - %d\n", i+1, a, b);
                     E.insert((((long long)a) << 32) | ((long long)b));
-                    insertEdge(&V[a], &V[b]);
+                    E.insert((((long long)b) << 32) | ((long long)a));
+                    //insertEdge(&V[a], &V[b]);
                     g->addEdge(*new Edge(VV[a], VV[b]));
+                    // for(auto d : V){
+                    //     //d.print();
+                    // }
                 }
-                printf("Insert Edge: %d - %d\n", a, b);
                 break;
             case 2:
                 if(!E.contains((((long long)a) << 32) | ((long long)b))){
                     i--;
                     continue;
                 } else {
+                    //cout << "-----------------------------------\n";
+                    ii << "D " << a << ' ' << b << endl;
+                    //printf("%d. Delete Edge: %d - %d\n", i+1, a, b);
                     E.erase((((long long)a) << 32) | ((long long)b));
-                    removeEdge(&V[a], &V[b], dummy);
+                    E.erase((((long long)b) << 32) | ((long long)a));
+                    //removeEdge(&V[a], &V[b], dummy);
+                    // for(auto d : V){
+                    //     //d.print();
+                    // }
                     g->removeEdge(*new Edge(VV[a], VV[b]));
                 }
-                printf("Delete Edge: %d - %d\n", a, b);
                 break;
             case 3:
-                printf("Query Edge: %d - %d: DTree says %s\n", a, b, isConnected(&V[a], &V[b])? "True": "False");
-                printf("Query Edge: %d - %d: BFS says %s\n", a, b, g->isConnected(VV[a], VV[b])? "True": "False");
+                //if(cc != 3) cout << "-----------------------------------\n";
+                //bool success1 = isConnected(&V[a], &V[b]);
+                bool success2 = g->isConnected(VV[a], VV[b]);
+                ii << "Q " << a << ' ' << b << endl;
+                oo << (success2? "True": "False") << endl;
+                //if(success1 != success2) falses.push_back(i+1);
+                //printf("%d. Query Edge: %d - %d: BFS says %s, DTree says %s\n", i+1, a, b, success2? "True": "False", success1? "True": "False");
                 break;
         };
+        cc = c;
+        if(i%1000==999){// for(auto d : V){
+            cout << (i+1)/1000 << endl;//d.print();
+        }
     }
+    // for(auto i : falses){
+    //     //printf("%d ", i);
+    // } //cout << endl;
+    // int m[100][100];
+    // for(int i=0;i<v;i++){
+    //     for(int j=0;j<v;j++){
+    //         m[i][j] = isAdjacent(&V[i], &V[j]);
+    //     }
+    // }
+    // for(int i=0;i<v;i++){
+    //     //cout << m[i][0];
+    //     for(int j=1;j<v;j++){
+    //         //cout << ", " << m[i][j];
+    //     } //cout << endl;
+    // }
+    //cout << endl << rr;
     return 0;
 }

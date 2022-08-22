@@ -301,29 +301,30 @@ struct IncList : Graph {
 
     ///Time Complexity: O(V+E)
     bool isConnected(Vertex& u, Vertex& v) override {
-        cout << "test1" << endl;
+        //cout << "test1" << endl;
         deque<Vertex> q;
         unordered_set<Vertex> vs;
-        Vertex* x;
+        Vertex x;
         vs.insert(u);
         q.push_back(u);
-        cout << "test2 " << u.hash << endl;
+        //cout << "test2 " << u.hash << endl;
         while(!q.empty()){
-            cout << "test5" << endl;
-            x = &q.front();
+            //cout << "test5" << endl;
+            x = q.front();
+            //cout << "test3 " << x.hash << ' ' << q.front().hash << endl;
             q.pop_front();
-            cout << "test3 " << x->hash << endl;
-            if(*x == v) return true;
-            if(l[*x].empty()) continue;
-            for(Edge e : l[*x]){
-                cout << "test4" << endl;
-                Vertex* w = *x == *e.u? e.v : e.u;
-                if(!vs.contains(*w)){
-                    vs.insert(*w);
-                    q.push_back(*w);
+            if(x == v) return true;
+            if(l[x].empty()) continue;
+            for(Edge e : l[x]){
+                //cout << "test4" << endl;
+                Vertex w = *(x == *e.u? e.v : e.u);
+                if(!vs.contains(w)){
+                    vs.insert(w);
+                    q.push_back(w);
                 }
             }
         }
+        return false;
     }
 
     /// Time Complexity: O(1)

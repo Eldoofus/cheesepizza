@@ -1,4 +1,3 @@
-#pragma once
 #include<bits/stdc++.h>
 using namespace std;
 
@@ -22,15 +21,6 @@ struct dynTreeNode {
         dynTreeNode* ru = this;
         for(du = 0;ru->parent;du++) ru = ru->parent;
         return du;
-    }
-
-    void print(){
-        cout << "Hash: " << hash << ", Parent: " << (parent?to_string(parent->hash):"") << ", Children: ";
-        for(auto& e : children) cout << e->hash << " ";
-        cout << ", NTEs: ";
-        for(auto& e : nte) cout << e->hash << " ";
-        if(!parent && children.empty() && !nte.empty()) cout << "HELP ME";
-        cout << endl;
     }
 };
 
@@ -120,7 +110,6 @@ dynTreeNode* insertEdge(dynTreeNode* nu, dynTreeNode* nv){
 dynTreeNode* removeEdge(dynTreeNode* u, dynTreeNode* v, dynTreeNode*& d){
     dynTreeNode* n, *root = u->root();
     if(u->parent == v || v->parent == u){
-        //cout << "Deleting Tree Edge...\n";
         if(u == v->parent) n = v;
         else n = u;
         n = unlink(n);
@@ -128,27 +117,21 @@ dynTreeNode* removeEdge(dynTreeNode* u, dynTreeNode* v, dynTreeNode*& d){
         unordered_multimap<dynTreeNode*, dynTreeNode*> R;
         deque<dynTreeNode*> q = {rs};
         unordered_set<dynTreeNode*> st({rs});
-        //cout << "Rs: " << rs->hash << endl;
-        //cout << "Rl: " << rl->hash << endl;
         while(!q.empty()){
             dynTreeNode* it = q.front();
             q.pop_front();
-            //cout << "O: " << it->hash << endl;
             for(dynTreeNode* c : it->children) {
-                //cout << "I:" << c->hash << endl;
                 q.push_back(c);
                 st.insert(c);
                 if(c->size > rs->size/2) m = c;
             }
         }
         for(dynTreeNode* s : st) {
-            //cout << "Checking Node " << s->hash << " NTEs" << endl;
             for(dynTreeNode* t : s->nte) {
                 if(!st.contains(t)) R.emplace(s, t);
             }
         }
         if(R.empty()){
-            //cout << "No Replacement Edges Found\n";
             if(m) reroot(m);
             d = rl;
             return rs;
@@ -167,9 +150,76 @@ dynTreeNode* removeEdge(dynTreeNode* u, dynTreeNode* v, dynTreeNode*& d){
             return insertEdge(nrs, nrl);
         }
     } else {
-        //cout << "Deleting Non-Tree Edge...\n";
         v->nte.erase(u);
         u->nte.erase(v);
         return root;
     }
+}
+
+int v = 10000, ops = 130000;
+
+int main(){
+    ofstream oo("out.txt"), ii("in.txt");
+    ii << v << ' ' << ops << endl;
+    random_device rd;
+    mt19937 rng(rd());
+    uniform_int_distribution<int> uni(1, 3);
+    uniform_int_distribution<int> rnd(0, v-1);
+    dynTreeNode* dummy;
+    vector<dynTreeNode> V;
+    unordered_set<long long> E;
+    //vector<Vertex> VV;
+    //Graph* g = new IncList();
+    for(int i=0;i<v;i++){
+        V.emplace_back(i);
+        //VV.emplace_back(i);
+        //g->addVertex(VV.back());
+    }
+    int a, b, cc = 3;
+    for(int i=0;i<ops;i++){
+        a = rnd(rng);
+        b = rnd(rng);
+        if(a == b){
+            i--;
+            continue;
+        }
+        int c = i<100000?uni(rng):3;
+        switch(c){
+            case 1:
+                if(E.contains((((long long)a) << 32) | ((long long)b))){
+                    i--;
+                    continue;
+                } else {
+                    ii << "I " << a << ' ' << b << endl;
+                    E.insert((((long long)a) << 32) | ((long long)b));
+                    E.insert((((long long)b) << 32) | ((long long)a));
+                    insertEdge(&V[a], &V[b]);
+                    //g->addEdge(*new Edge(VV[a], VV[b]));
+                }
+                break;
+            case 2:
+                if(!E.contains((((long long)a) << 32) | ((long long)b))){
+                    i--;
+                    continue;
+                } else {
+                    ii << "D " << a << ' ' << b << endl;
+                    E.erase((((long long)a) << 32) | ((long long)b));
+                    E.erase((((long long)b) << 32) | ((long long)a));
+                    removeEdge(&V[a], &V[b], dummy);
+                    //g->removeEdge(*new Edge(VV[a], VV[b]));
+                }
+                break;
+            case 3:
+                bool success = isConnected(&V[a], &V[b]);
+                //bool success = g->isConnected(VV[a], VV[b]);
+                ii << "Q " << a << ' ' << b << endl;
+                oo << (success? "True": "False") << endl;
+                break;
+        };
+        cc = c;
+        if(i%1000==999){
+            cout << (i+1)/1000 << endl;
+        }
+    }
+    return 0;
 }
